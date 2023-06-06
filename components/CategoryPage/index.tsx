@@ -1,24 +1,22 @@
+import { AnimatePresence } from "framer-motion";
+import { flatten } from "lodash";
 import { useRouter } from "next/router";
+import qs from "qs";
+import { useEffect, useState } from "react";
+import { ScaleLoader } from "react-spinners";
 import useSWR from "swr";
 import useSWRInfinite from "swr/infinite";
-import { useEffect, useState } from "react";
-import qs from "qs";
-import { ScaleLoader } from "react-spinners";
-import { motion, AnimatePresence } from "framer-motion";
+import { getProduct, getProductCategories } from "../../api";
 import {
   CategoryPageResponse,
   ComposeWithMeta,
   ListProduct,
   StrapiEntry,
 } from "../../api/types";
-import FilterDropdown from "../../components/FilterDropdown";
-import ListProductCard from "../../components/ListProductCard";
 import ArchiveLayout from "../../components/ArchiveLayout";
-import { getProduct, getProductCategories } from "../../api";
-import Logo from "../../components/Icons/Logo";
-import Spacing from "../Spacing";
-import { flatten } from "lodash";
+import ListProductCard from "../../components/ListProductCard";
 import { getLocale } from "../../utils";
+import Spacing from "../Spacing";
 
 type CategoryPageProps = CategoryPageResponse & {
   teaCategory?: string;
@@ -122,11 +120,12 @@ export default function CategoryPage({
   banner,
   description,
   teaCategory,
+  products
 }: CategoryPageProps) {
   const router = useRouter();
   const locale = router.locale;
 
-  console.log(router);
+  // console.log(router);
 
   const { data: categories } = useSWR("/api/product-categories", () =>
     getProductCategories({ locale })
@@ -189,64 +188,16 @@ export default function CategoryPage({
     (query) => getProduct(query)
   );
 
-  const onCategoryChangeHandler = (value: string) => {
-    setSize(1);
-    router.query.productCategory = value;
 
-    if (!value) {
-      delete router.query.productCategory;
-    }
 
-    router.push(router, undefined, { shallow: true });
-  };
+  
 
-  const onPackingChangeHandler = (value: string) => {
-    setSize(1);
-    router.query.packing = value;
-
-    if (!value) {
-      delete router.query.packing;
-    }
-
-    router.push(router, undefined, { shallow: true });
-  };
-
-  const products = flatten(response?.map((data) => data.data));
   const totalPage = response && response[0].meta.pagination.pageCount;
   const hasNextPage = size !== totalPage;
 
-  const categoryList = categories
-    ? categories
-      .sort((a, b) => b.attributes.sort - a.attributes.sort)
-      .map((category) => ({
-        label: category.attributes.label,
-        value: category.attributes.slug,
-      }))
-    : [];
 
-  const packingList = [
-    {
-      label: locale === 'en' ? "All" : "所有包裝",
-      value: false,
-    },
-    {
-      label: locale === 'en' ? "Tea can" : "茶葉罐",
-      value: "Tea can",
-    },
-    {
-      label: locale === 'en' ? "Tea bag" : "茶包盒",
-      value: "Tea bag",
-    },
-  ];
-
-  const backingList = [
-    { label: locale === 'en' ? "All" : "所有方法", value: false },
-    { label: locale === 'en' ? "none" : "無", value: "none" },
-    { label: locale === 'en' ? "light" : "輕", value: "light" },
-    { label: locale === 'en' ? "medium" : "中", value: "medium" },
-    { label: locale === 'en' ? "heavy" : "重", value: "heavy", },
-  ];
-
+ 
+  // console.log("PRODUCTS==>",products)
   return (
     <ArchiveLayout
       title={title}
@@ -255,112 +206,15 @@ export default function CategoryPage({
       description={description}
     >
       <div className="container m-auto">
-        <div className="mb-10 md:flex justify-between md:items-center">
-          <div className="flex flex-row justify-between md:justify-start gap-2 md:gap-8 md:items-center">
-            {!!categoryList.length && (
-              <FilterDropdown
-                placeholder={locale === 'en' ? "Type" : "商品種類"}
-                value={type}
-                onChange={(value) => {
-                  onCategoryChangeHandler(value);
-                }}
-                list={[{ label: locale === 'en' ? "All" : "所有種類", value: false }, ...categoryList]}
-              />
-            )}
-            <FilterDropdown
-              placeholder={locale === 'en' ? "Package" : "包裝方式"}
-              value={packing}
-              onChange={(value) => {
-                onPackingChangeHandler(value);
-              }}
-              list={packingList}
-            />
-            <FilterDropdown
-              placeholder={locale === 'en' ? "Level of Roasting" : "烘焙度"}
-              value={baking}
-              onChange={(value) => {
-                setSize(1);
-                setBaking(value);
-              }}
-              list={backingList}
-            />
-          </div>
-          <button
-            onClick={() => setShowPopular((toggle) => !toggle)}
-            className={`text-secondary mt-5 md:mt-0 border-2 border-secondary px-4 py-[6px] transition-all ${showPopular
-              ? "bg-secondary text-white hover:bg-secondary-hover active:bg-secondary-active"
-              : "hover:bg-transparent-hover active:bg-transparent-active"
-              }`}
-          >
-            {locale === 'en' ? "Best Selling" : "顯示熱賣產品"}
-          </button>
-        </div>
+        <div className="mb-10 md:flex justify-between md:items-center"></div>
         <div className="w-full grid grid-cols-4 md:grid-cols-12 gap-[44px]">
           <AnimatePresence exitBeforeEnter>
             {products &&
-              products.map((listProduct) => (
-                <motion.div
-                  key={listProduct.id}
-                  className="col-span-4"
-                  initial={{
-                    opacity: 0,
-                    y: -20,
-                  }}
-                  animate={{
-                    opacity: 1,
-                    y: 0,
-                  }}
-                  exit={{
-                    opacity: 0,
-                    y: 20,
-                  }}
-                >
-                  <ListProductCard {...listProduct.attributes} />
-                </motion.div>
-              ))}
-            {!products && (
-              <motion.div
-                className="col-span-12 flex justify-center h-[500px] items-center"
-                initial={{
-                  opacity: 0,
-                  y: -20,
-                }}
-                animate={{
-                  opacity: 1,
-                  y: 0,
-                }}
-                exit={{
-                  opacity: 0,
-                  y: 20,
-                }}
-              >
-                <ScaleLoader color="#78A0AA" />
-              </motion.div>
-            )}
-            {products && products.length === 0 && (
-              <motion.div
-                initial={{
-                  opacity: 0,
-                  y: -20,
-                }}
-                animate={{
-                  opacity: 1,
-                  y: 0,
-                }}
-                exit={{
-                  opacity: 0,
-                  y: 20,
-                }}
-                className="col-span-12 flex justify-center h-[500px] items-center"
-              >
-                <div className="flex flex-col items-center opacity-70">
-                  <div className="mb-5">
-                    <Logo className="fill-black w-20 h-20" />
-                  </div>
-                  <span className="text-body font-bold">{locale ==='en'? "No result":"搜尋沒有結果"}</span>
+              products.map((listProduct:any) => (
+                <div key={listProduct.id} className="col-span-4">
+                  <ListProductCard {...listProduct} />
                 </div>
-              </motion.div>
-            )}
+              ))}
           </AnimatePresence>
         </div>
         <Spacing className="h-[100px]" />
@@ -371,7 +225,7 @@ export default function CategoryPage({
               onClick={() => setSize(size + 1)}
               className="border border-secondary text-body text-secondary py-[6px] min-w-[140px] hover:bg-secondary-light-hover active:bg-secondary-light-active transition-colors"
             >
-              {locale === 'en' ? "Show more" : "顯示更多產品"}
+              {locale === "en" ? "Show more" : "顯示更多產品"}
             </button>
           )}
         </div>

@@ -50,7 +50,6 @@ const Home: NextPage<HomeProps> = ({
       <DecorateLine type={3} className="absolute right-0" />
       <Spacing className="h-[86px]" />
       <div className="relative">
-        <HomeProducts {...homeProduct} />
         <DecorateLine type={4} className="absolute left-0 top-[50%]" />
       </div>
       <Spacing className="h-[80px]" />

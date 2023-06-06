@@ -2,7 +2,7 @@
 const nextConfig = {
   reactStrictMode: false,
   images: {
-    domains: ["localhost", "cms.muayiktea.com"],
+    domains: ["localhost", "cms.muayiktea.com", "cdn.shopify.com"],
   },
   i18n: {
     locales: ["en", "zh"],

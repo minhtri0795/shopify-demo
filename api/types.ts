@@ -273,6 +273,7 @@ export type CategoryPageResponse = {
   };
   description?: string;
   seo?: SEO;
+  products?:any;
 };
 
 /**
@@ -388,6 +389,7 @@ export type DetailProduct = {
       };
     };
   }[];
+  product:any;
 };
 
 export type ProductCategory = {
