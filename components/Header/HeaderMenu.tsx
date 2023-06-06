@@ -1,3 +1,4 @@
+import React, { useContext,useCallback } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import Typography from "../Typography";
@@ -6,8 +7,7 @@ import * as NavigationMenu from "@radix-ui/react-navigation-menu";
 import HeaderLogo from "../../public/header_logo.svg";
 import { HeaderResponse } from "../../api/types";
 import Arrow from "../Icons/Arrow";
-import LangSwitcher from "../LangSwitcher";
-
+import { ShopContext } from "../../context/shopContext";
 const enterFromLeft = keyframes({
   from: { transform: "translateY(-40px)", opacity: 0 },
   to: { transform: "translateY(0)", opacity: 1 },
@@ -98,77 +98,81 @@ type HeaderMenuProps = {
   atTop: boolean;
 };
 
-const HeaderMenu = ({ menu, atTop }: HeaderMenuProps) => (
-  <NavigationMenu.Root className="relative z-20 w-full">
-    <div className="flex justify-between items-center h-16 border-t border-[#E4E3E3] bg-white">
-      <div className="ml-[100px]">
-        <Link href="/">
-          <a
-            className={`transition-all duration-500 ${
-              atTop ? "opacity-0" : "opacity-100"
-            }`}
-          >
-            <Image src={HeaderLogo} alt="Header logo" width={50} />
-          </a>
-        </Link>
-      </div>
-      <NavigationMenu.List className="flex justify-center items-center gap-12">
-        {menu.map((item) => (
-          <NavigationMenu.Item key={item.id}>
-            {!item.subMenu ||
-              (item.subMenu.length === 0 && (
-                <NavigationMenu.Link className="hover:text-secondary transition-colors">
-                  <Link href={item.link || ""}>
-                    <a>{item.label}</a>
-                  </Link>
-                </NavigationMenu.Link>
-              ))}
-            {item.subMenu && item.subMenu.length !== 0 && (
-              <>
-                <NavigationMenu.Trigger className="hover:text-secondary hover:fill-secondary transition-colors flex items-center gap-1">
-                  {item.label}
-                  <Arrow />
-                </NavigationMenu.Trigger>
-                <StyledContent>
-                  <div className="flex gap-20">
-                    {item.subMenu.map((subMenu) => (
-                      <div key={subMenu.id}>
-                        <Typography
-                          variant="body"
-                          tag="span"
-                          className="font-bold"
-                        >
-                          {subMenu.title}
-                        </Typography>
-                        <ul>
-                          {subMenu.list.map((item) => (
-                            <li key={item.id}>
-                              <Typography variant="body" tag="span">
-                                <Link href={item.link || ""}>
-                                  <a className="hover:text-secondary transition-colors">
-                                    {item.label}
-                                  </a>
-                                </Link>
-                              </Typography>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    ))}
-                  </div>
-                </StyledContent>
-              </>
-            )}
-          </NavigationMenu.Item>
-        ))}
-      </NavigationMenu.List>
-      <LangSwitcher />
-    </div>
+const HeaderMenu = ({ menu, atTop }: HeaderMenuProps) => {
+  const { openCart, checkout } = useContext(ShopContext);
+  // let sum = checkout?.lineItems ? checkout?.lineItems: 0
 
-    <StyledViewportContainer>
-      <StyledViewport />
-    </StyledViewportContainer>
-  </NavigationMenu.Root>
-);
+  let sum = useCallback(checkout?.lineItems?.reduce(function (
+    previousValue: any,
+    currentValue: any,
+  ) {
+    console.table([["previousValue",previousValue.quantity],["currentValue",currentValue.quantity]])
+    return {quantity: previousValue.quantity + currentValue.quantity};
+  },{quantity:0}),[checkout]);
+  return (
+    <NavigationMenu.Root className="relative z-20 w-full">
+      <div className="flex justify-between items-center h-16 border-t border-[#E4E3E3] bg-white">
+        <div className="ml-[100px]">
+          <Link href="/">
+            <a
+              className={`transition-all duration-500 ${
+                atTop ? "opacity-0" : "opacity-100"
+              }`}
+            >
+              <Image src={HeaderLogo} alt="Header logo" width={50} />
+            </a>
+          </Link>
+        </div>
+        <NavigationMenu.List className="flex justify-center items-center gap-12">
+          <NavigationMenu.Item>
+            <NavigationMenu.Link className="hover:text-secondary transition-colors">
+              <Link href={"/about"}>
+                <a>About</a>
+              </Link>
+            </NavigationMenu.Link>
+          </NavigationMenu.Item>
+          <NavigationMenu.Item>
+            <NavigationMenu.Link className="hover:text-secondary transition-colors">
+              <Link href={"/category"}>
+                <a>All products</a>
+              </Link>
+            </NavigationMenu.Link>
+          </NavigationMenu.Item>
+          <NavigationMenu.Item>
+            <NavigationMenu.Link className="hover:text-secondary transition-colors">
+              <Link href={"/articles"}>
+                <a>Articles</a>
+              </Link>
+            </NavigationMenu.Link>
+          </NavigationMenu.Item>
+          <NavigationMenu.Item>
+            <NavigationMenu.Link className="hover:text-secondary transition-colors">
+              <Link href={"/contact"}>
+                <a>Contact us</a>
+              </Link>
+            </NavigationMenu.Link>
+          </NavigationMenu.Item>
+        </NavigationMenu.List>
+        <div onClick={() => openCart()}>
+          <div className="mr-20 hidden md:flex gap-3 items-center cursor-pointer relative">
+            <Image
+              src={"/shopping-cart.png"}
+              alt="global icon"
+              width={30}
+              height={30}
+            />
+            <span className=" absolute top-[-40%] right-[-40%] bg-[#ff013f] text-white w-6 h-6 flex items-center justify-center font-bold text-xs rounded-full">
+              {sum?.quantity}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <StyledViewportContainer>
+        <StyledViewport />
+      </StyledViewportContainer>
+    </NavigationMenu.Root>
+  );
+};
 
 export default HeaderMenu;

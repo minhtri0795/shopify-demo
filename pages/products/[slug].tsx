@@ -1,19 +1,12 @@
-import { Fragment, HTMLProps, useState } from "react";
-import { GetStaticPaths, GetStaticProps } from "next";
-import { Swiper, SwiperSlide } from "swiper/react";
-import { getProductBySlug, getRelatedProducts } from "../../api";
 import { InferGetStaticPropsType } from "next";
-import { DetailProduct } from "../../api/types";
 import Image from "next/image";
-import { appendBaseUrl, renderPackingText } from "../../utils";
-import Spacing from "../../components/Spacing";
-import SocialMediaList from "../../components/SocialMediaList";
-import ProductTag from "../../components/ProductTag";
-import SectionTitle from "../../components/SectionTitle";
-import useSWR from "swr";
-import Seo from "../../components/Seo";
 import { useRouter } from "next/router";
-import { shopifyClient, parseShopifyResponse } from "../../lib/shopify";
+import React, { useContext } from "react";
+import { Swiper, SwiperSlide } from "swiper/react";
+import { getProductBySlug } from "../../api";
+import Spacing from "../../components/Spacing";
+import { ShopContext } from "../../context/shopContext";
+import { parseShopifyResponse, shopifyClient } from "../../lib/shopify";
 export const BlockTitle = ({ text }: { text: string }) => (
   <h2 className="mb-[10px] text-body font-bold">{text}</h2>
 );
@@ -30,96 +23,21 @@ export const Description = ({
     <p className="text-body">{children}</p>
   </div>
 );
-//產品規格
-export const Spec = ({
-  children,
-  locale,
-}: {
-  children: React.ReactNode;
-  locale: string;
-}) => (
-  <div>
-    <BlockTitle text={locale} />
-    <ul className="text-body mb-1">{children}</ul>
-  </div>
-);
-
-export const BuyButton = ({
-  label,
-  link,
-}: {
-  label?: string;
-  link?: string;
-}) => (
-  <div>
-    <a
-      href={link}
-      className="inline-block text-center bg-secondary text-body text-white py-[6px] min-w-[140px] hover:bg-secondary-hover active:bg-secondary-active transition-colors"
-    >
-      {label}
-    </a>
-  </div>
-);
-//包裝方式
-export const PackingMethod = ({
-  children,
-  locale,
-}: {
-  children: React.ReactNode;
-  locale: string;
-}) => (
-  <div>
-    <BlockTitle text={locale} />
-    <div className="flex gap-2">{children}</div>
-  </div>
-);
-//產品特色
-export const Tags = ({
-  children,
-  locale,
-}: {
-  children: React.ReactNode;
-  locale: string;
-}) => (
-  <div>
-    <BlockTitle text={locale} />
-    <ul className="flex flex-col gap-2">{children}</ul>
-  </div>
-);
-//其他注意事項
-export const Notice = ({
-  children,
-  locale,
-}: {
-  children: React.ReactNode;
-  locale: string;
-}) => (
-  <div>
-    <BlockTitle text={locale} />
-    <p className="text-body">{children}</p>
-  </div>
-);
 
 export default function ProductPage(
   props: InferGetStaticPropsType<typeof getServerSideProps>
 ) {
-  const {
-    product,
-  }:any = props;
-  const {  title, images, description, variants } = product;
+  const { product }: any = props;
+  const { title, images, description, variants } = product;
   const { price } = variants[0];
 
   const router = useRouter();
-
+  const { addItemTocheckout, openCart } = useContext(ShopContext);
   const locale = router.locale;
-
-
-
 
   const basePath = `${process.env.NEXT_PUBLIC_URL}${
     locale === "zh" ? "/zh" : ""
   }/products`;
-
   return (
     <>
       <div className="container m-auto">
@@ -127,8 +45,6 @@ export default function ProductPage(
           <Swiper
             spaceBetween={50}
             slidesPerView={1}
-            onSlideChange={() => console.log("slide change")}
-            onSwiper={(swiper) => console.log(swiper)}
           >
             {images.map((image: any) => (
               <SwiperSlide key={image.id}>
@@ -163,9 +79,7 @@ export default function ProductPage(
           <div className="col-span-6 relative">
             <div className="md:sticky top-[60px]">
               <div>
-              <span className="block text-subtitle">
-                    {"{{teaCategory}}"}
-                  </span>
+                <span className="block text-subtitle">{"{{teaCategory}}"}</span>
                 <h1 className="text-h2 text-secondary font-serif mt-[10px]">
                   {title}
                 </h1>
@@ -176,9 +90,15 @@ export default function ProductPage(
 
               <Spacing className="h-6" />
 
-             
-              <BuyButton label={'Buy now'} link={"#"} />
-              
+              <button
+                onClick={() => {
+                  addItemTocheckout(product.variants[0].id, 1);
+                  
+                }}
+                className="cursor-pointer inline-block text-center bg-secondary text-body text-white py-[6px] min-w-[140px] hover:bg-secondary-hover active:bg-secondary-active transition-colors"
+              >
+                Buy now
+              </button>
 
               <Spacing className="h-[38px]" />
 
@@ -199,7 +119,7 @@ export default function ProductPage(
   );
 }
 
-export const getServerSideProps = async ({ params, locale }:any) => {
+export const getServerSideProps = async ({ params, locale }: any) => {
   const { slug } = params!;
   const data = await getProductBySlug(slug, { locale });
   const product = await shopifyClient.product.fetchByHandle(slug);
@@ -208,7 +128,6 @@ export const getServerSideProps = async ({ params, locale }:any) => {
       notFound: true,
     };
   }
-
 
   return {
     props: {

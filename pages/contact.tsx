@@ -14,7 +14,6 @@ export default function contactPage(
     <div>
       {seo && <Seo {...seo} />}
       <ArchiveLayout {...archiveLayout}>
-        <ContactForm />
       </ArchiveLayout>
     </div>
   );
