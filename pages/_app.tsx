@@ -7,10 +7,13 @@ import Cart from "../components/Cart";
 import "swiper/css";
 import "swiper/css/pagination";
 import CookieConsent from "react-cookie-consent";
-
+import Head from "next/head";
 function MyApp({ Component, pageProps }: AppProps) {
   return (
     <ShopProvider>
+      <Head>
+        <meta name="robots" content="noindex,nofollow"/>
+      </Head>
       <Layout>
         <Cart/>
         <Component {...pageProps} />
